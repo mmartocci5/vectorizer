@@ -4,14 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vectorizer App</title>
+    <style>
+        #progressBar, #result, #startOver {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload Image for Vectorization</h1>
-    
-    <input type="file" id="imageUpload">
-    <button onclick="vectorize()">Vectorize</button>
+    <div id="uploadSection">
+        <h1>Upload Image for Vectorization</h1>
+        <input type="file" id="imageUpload">
+        <button onclick="vectorize()">Vectorize</button>
+    </div>
 
-    <div id="output"></div>
+    <div id="progressBar">Vectorizing...<progress max="100"></progress></div>
+    <div id="result">
+        <p>Your file has been successfully vectorized!</p>
+        <a href="#" download="result.svg" id="downloadLink">Download SVG</a>
+        <button onclick="startOver()">Start Over</button>
+    </div>
 
     <script src="script.js"></script>
 </body>
@@ -19,12 +30,19 @@
 
 async function vectorize() {
     const imageUpload = document.getElementById('imageUpload');
-    const output = document.getElementById('output');
+    const progressBar = document.getElementById('progressBar');
+    const uploadSection = document.getElementById('uploadSection');
+    const result = document.getElementById('result');
+    const downloadLink = document.getElementById('downloadLink');
 
     if (!imageUpload.files.length) {
         alert('Please select an image first.');
         return;
     }
+
+    // Show progress bar and hide upload section
+    progressBar.style.display = 'block';
+    uploadSection.style.display = 'none';
 
     const formData = new FormData();
     formData.append('image', imageUpload.files[0]);
@@ -33,21 +51,37 @@ async function vectorize() {
         const response = await fetch('https://vectorizer.ai/api/v1/vectorize', {
             method: 'POST',
             headers: {
-                'Authorization': 'Basic dmtpcXZjdm1rcjdpaHBhOmxwMXJsZjlmdGlxbzcxZmN1NGxhNW5kMm4zOHQyazAxMG1nNGYzdDB2c3NlbDV2NmV2czc='
+                'Authorization': 'Basic your_api_key_here' //replace with your actual key
             },
             body: formData
         });
 
+        progressBar.style.display = 'none';
+
         if (response.ok) {
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
-            output.innerHTML = `<a href="${url}" download="result.svg">Download SVG</a>`;
+            downloadLink.href = url;
+            result.style.display = 'block';
         } else {
-            output.textContent = `Request Failed: Status: ${response.status}, Reason: ${response.statusText}`;
+            uploadSection.style.display = 'block';
+            alert(`Request Failed: Status: ${response.status}, Reason: ${response.statusText}`);
         }
     } catch (error) {
         console.error('There was an error with the request:', error);
-        output.textContent = 'Error: ' + error.message;
+        progressBar.style.display = 'none';
+        uploadSection.style.display = 'block';
+        alert('Error: ' + error.message);
     }
 }
 
+function startOver() {
+    const uploadSection = document.getElementById('uploadSection');
+    const result = document.getElementById('result');
+
+    uploadSection.style.display = 'block';
+    result.style.display = 'none';
+
+    // Clear the file input
+    document.getElementById('imageUpload').value = '';
+}
