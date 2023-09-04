@@ -16,3 +16,38 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+async function vectorize() {
+    const imageUpload = document.getElementById('imageUpload');
+    const output = document.getElementById('output');
+
+    if (!imageUpload.files.length) {
+        alert('Please select an image first.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', imageUpload.files[0]);
+
+    try {
+        const response = await fetch('https://vectorizer.ai/api/v1/vectorize', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic dmtpcXZjdm1rcjdpaHBhOmxwMXJsZjlmdGlxbzcxZmN1NGxhNW5kMm4zOHQyazAxMG1nNGYzdDB2c3NlbDV2NmV2czc='
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            output.innerHTML = `<a href="${url}" download="result.svg">Download SVG</a>`;
+        } else {
+            output.textContent = `Request Failed: Status: ${response.status}, Reason: ${response.statusText}`;
+        }
+    } catch (error) {
+        console.error('There was an error with the request:', error);
+        output.textContent = 'Error: ' + error.message;
+    }
+}
+
